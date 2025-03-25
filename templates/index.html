@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Guidance Chat</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1e1e1e 0%, #000000 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 280px;
+            background: rgba(30, 30, 30, 0.8);
+            padding: 20px;
+            height: 100vh;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
+        }
+        .sidebar h3 {
+            margin-bottom: 15px;
+            color: #b3e0ff;
+        }
+        .sidebar label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a0a0a0;
+        }
+        .radio-group {
+            margin-bottom: 15px;
+        }
+        .radio-group label {
+            display: inline-block;
+            margin-right: 15px;
+            cursor: pointer;
+            color: #ccc;
+        }
+        .radio-group input[type="radio"] {
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        .chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            margin-left: 280px;
+            position: relative;
+            min-height: 100vh; /* Changed height to min-height */
+        }
+        .chat-header {
+            position: fixed;
+            top: 50;
+            left: 680px;
+            width: 300px;
+            background: rgba(30, 30, 30, 0.8);
+            padding: 15px 15px; /* Reduced left padding */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            z-index: 99;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start; /* Align header to the left */
+        }
+        .chat-header h2 {
+            margin: 0;
+            color: #e0e0e0;
+        }
+        #chat-box {
+            flex-grow: 1;
+            width: 70%;
+            max-width: 700px;
+            margin: 80px auto 100px auto; /* Adjusted top and bottom margins for vertical alignment */
+            overflow-y: auto;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(42, 42, 42, 0.7);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 12px;
+            border-radius: 6px;
+            word-wrap: break-word;
+            opacity: 0.9;
+            position: relative;
+        }
+        .user {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            align-self: flex-end;
+        }
+        .bot {
+            background: rgba(51, 51, 51, 0.8);
+            color: #e0e0e0;
+            align-self: flex-start;
+        }
+        .input-area {
+            display: flex;
+            background: rgba(42, 42, 42, 0.8);
+            padding: 12px 15px; /* Reduced left padding */
+            border-radius: 8px;
+            box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: fixed;
+            bottom: 20px;
+            left: 280px;
+            width: calc(100% - 280px);
+            max-width: 700px;
+            z-index: 101;
+            align-items: center;
+        }
+        #user_input {
+            flex-grow: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: #e0e0e0;
+            border-radius: 6px;
+            margin-right: 15px;
+            outline: none;
+        }
+        #send {
+            padding: 12px 18px;
+            border: none;
+            background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #send:hover {
+            background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
+        }
+        #clear-chat {
+            margin-top: 15px;
+            padding: 12px 18px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+        }
+        #clear-chat:hover {
+            background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+        }
+        h2, h3, label, select, option {
+            color: #e0e0e0;
+        }
+        /* Glowing effect for send button */
+        #send:focus {
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.8);
+        }
+        /* Glowing effect for clear button */
+        #clear-chat:focus {
+            box-shadow: 0 0 10px rgba(244, 67, 54, 0.8);
+        }
+        /* Subtle glow on message boxes */
+        .message::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+        .user::before {
+            background: rgba(0, 123, 255, 0.2);
+        }
+        .bot::before {
+            background: rgba(51, 51, 51, 0.4);
+        }
+        .message:hover::before {
+            opacity: 1;
+        }
+        .input-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+        .input-area:hover::before {
+            opacity: 1;
+        }
+        .input-area {
+            position: relative;
+        }
+        /* Loading indicator */
+        #loading-indicator {
+            display: none;
+            color: #e0e0e0;
+            margin: 20px auto;
+            text-align: center;
+        }
+        .loading-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #777;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 1s infinite alternate;
+        }
+        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+    
+        @keyframes pulse {
+            from { opacity: 0.6; transform: scale(1); }
+            to { opacity: 1; transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>Career Guidance Chat</h2>
+        </div>
+        <div id="chat-box">
+            <div id="loading-indicator">
+                <span class="loading-dot"></span>
+                <span class="loading-dot"></span>
+                <span class="loading-dot"></span>
+                Loading...
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="user_input" placeholder="Type your question...">
+            <button id="send">Send</button>
+        </div>
+    </div>
+    <div class="sidebar">
+        <h3>Settings</h3>
+        <div class="radio-group">
+            <label>Model:</label><br>
+            <label><input type="radio" name="model" value="gpt-4" checked> GPT-4</label><br>
+            <label><input type="radio" name="model" value="deepseek"> DeepSeek</label>
+        </div>
+
+        <div class="radio-group">
+            <label>Language:</label><br>
+            <label><input type="radio" name="language" value="english" checked> English</label><br>
+            <label><input type="radio" name="language" value="hindi"> Hindi</label>
+        </div>
+
+        <button id="clear-chat">Clear Chat</button>
+    </div>
+    
+    <script>
+        $(document).ready(function() {
+            const chatBox = $("#chat-box");
+            const loadingIndicator = $("#loading-indicator");
+            let isFetching = false;
+
+            function setChatBoxWidth() {
+                const screenWidth = window.innerWidth;
+                const chatWidth = screenWidth * 0.7;
+                $("#chat-box").css("width", Math.min(chatWidth, 700) + "px");
+                $(".input-area").css("width", Math.min(chatWidth, 700) + "px");
+            }
+
+            setChatBoxWidth();
+            $(window).resize(setChatBoxWidth);
+
+            function refreshChat() {
+                $.get("/get_chat_history", function(data) {
+                    chatBox.empty();
+                    data.forEach(chat => {
+                        let className = chat.role === "user" ? "user" : "bot";
+                        chatBox.append(`<div class='message ${className}'><strong>${chat.role.charAt(0).toUpperCase() + chat.role.slice(1)}:</strong> ${chat.content}</div>`);
+                    });
+                    chatBox.scrollTop(chatBox[0].scrollHeight);
+                    loadingIndicator.hide();
+                });
+            }
+
+            $("#send").click(function() {
+                if (isFetching) return;
+                isFetching = true;
+                loadingIndicator.show();
+                let userInput = $("#user_input").val();
+                let model = $('input[name="model"]:checked').val();
+                let language = $('input[name="language"]:checked').val();
+
+                if (userInput) {
+                    chatBox.append(`<div class='message bot'><div id='temp-loading'>Loading...</div></div>`);
+                    chatBox.scrollTop(chatBox[0].scrollHeight);
+                    $.post("/", { user_input: userInput, model: model, language: language }, function(response) {
+                        refreshChat();
+                        $("#user_input").val("");
+                        isFetching = false;
+                        $("#temp-loading").remove();
+                    }).fail(function(xhr, status, error) {
+                        console.error("Error sending message:", error);
+                        chatBox.append(`<div class='message bot error'><strong>Error:</strong> Could not send message.</div>`);
+                        chatBox.scrollTop(chatBox[0].scrollHeight);
+                        loadingIndicator.hide();
+                        isFetching = false;
+                        $("#temp-loading").remove();
+                    });
+                } else {
+                    loadingIndicator.hide();
+                    isFetching = false;
+                }
+            });
+
+            $("#clear-chat").click(function() {
+                $.post("/clear_chat", function() {
+                    refreshChat();
+                });
+            });
+
+            refreshChat();
+        });
+    </script>
+</body>
+</html>
